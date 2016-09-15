@@ -3,6 +3,8 @@ package slp.seki.rectangleothello;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -15,10 +17,15 @@ public class OthelloView extends SurfaceView implements SurfaceHolder.Callback {
 
     private static final int DRAW_INTERVAL = 1000/60;
     private Board board;
+    private final Paint textpaint = new Paint();
+    int touchX = 0;
+    int touchY = 0;
 
     //-- コンストラクタ
     public OthelloView(Context context) {
         super(context);
+        textpaint.setColor(Color.BLACK);
+        textpaint.setTextSize(40f);
         getHolder().addCallback(this);
     }
     //-- 描画スレッド
@@ -97,6 +104,30 @@ public class OthelloView extends SurfaceView implements SurfaceHolder.Callback {
             board = new Board(canvas.getWidth(), canvas.getHeight(), cellSize);
         }
         board.draw(canvas);
+        canvas.drawText("x = " + touchX, 10, 150, textpaint);
+        canvas.drawText("y = " + touchY, 10, 200, textpaint);
+    }
+
+    //-- 画面をタッチしたら
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                put(event.getX(), event.getY());
+                touchX = (int) (event.getX() / 100);
+                touchY = (int) (event.getY() / 100);
+                break;
+        }
+        return super.onTouchEvent(event);
+    }
+
+    //-- 駒を置く
+    public void put(float x, float y) {
+        if ( board.canPut(x, y) ) {
+            board.put(x, y);
+            board.changePlayerColor();
+        }
+
     }
 
 }

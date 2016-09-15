@@ -13,6 +13,7 @@ public class Board {
     private int horizontalCellCount;
     private int verticalCellCount;
     private Cell[][] board;
+    private int player = Cell.TYPE_BLACK;
 
     public Board(int width, int height, int cellSize) {
         this.cellSize = cellSize;
@@ -46,7 +47,7 @@ public class Board {
         return board;
     }
 
-    void draw(Canvas canvas) {
+    public void draw(Canvas canvas) {
         int yLength = board.length;
         for (int y = 0; y < yLength; y++) {
             int xLength = board[y].length;
@@ -56,13 +57,33 @@ public class Board {
         }
     }
 
+    public boolean canPut(float x, float y) {
+        int setX = (int) (x / cellSize);
+        int setY = (int) (y / cellSize);
+        if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
+
+        return (board[setY][setX].type == Cell.TYPE_EMPTY) ? true : false;
+    }
+
+    public void put(float x, float y) {
+        int setX = (int) (x / cellSize);
+        int setY = (int) (y / cellSize);
+
+        board[setY][setX].type = player;
+    }
+
+    public void changePlayerColor() {
+        if ( player == Cell.TYPE_BLACK ) { player = Cell.TYPE_WHITE; }
+        else { player = Cell.TYPE_BLACK; }
+    }
+
 
     static class Cell {
         private static final int TYPE_EMPTY = 0;
         private static final int TYPE_WHITE = -1;
         private static final int TYPE_BLACK = +1;
 
-        private final int type;
+        private int type;
         private final int size;
         private final Paint paint;
         final Rect rect;

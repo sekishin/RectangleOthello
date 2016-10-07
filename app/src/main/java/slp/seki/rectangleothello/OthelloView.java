@@ -98,11 +98,11 @@ public class OthelloView extends SurfaceView implements SurfaceHolder.Callback {
 
     //-- 盤面描画
     void drawBoard(Canvas canvas) {
-        canvas.drawColor(Color.WHITE);
-        int cellSize = 100;
+        int cellSize = 150;
         if (board == null) {
             board = new Board(canvas.getWidth(), canvas.getHeight(), cellSize);
         }
+        canvas.drawColor(board.player);
         board.draw(canvas);
         canvas.drawText("x = " + touchX, 10, 150, textpaint);
         canvas.drawText("y = " + touchY, 10, 200, textpaint);

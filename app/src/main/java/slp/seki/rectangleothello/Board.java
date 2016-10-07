@@ -13,12 +13,15 @@ public class Board {
     private int horizontalCellCount;
     private int verticalCellCount;
     private Cell[][] board;
-    private int player = Cell.TYPE_BLACK;
+    protected int player = Cell.TYPE_BLACK;
+    private int spaceTop, spaceLeft;
 
     public Board(int width, int height, int cellSize) {
         this.cellSize = cellSize;
         this.horizontalCellCount = width / cellSize;
         this.verticalCellCount = height / cellSize;
+        spaceTop = height % cellSize / 2;
+        spaceLeft = width % cellSize / 2;
         board = createBoard();
     }
 
@@ -31,8 +34,8 @@ public class Board {
         for (int y = 0; y < verticalCellCount; y++) {
             for (int x = 0; x < horizontalCellCount; x++) {
                 int type = Cell.TYPE_EMPTY;
-                int left = x * cellSize + 1;
-                int top = y * cellSize + 1;
+                int left = x * cellSize + 1 + spaceLeft;
+                int top = y * cellSize + 1 + spaceTop;
                 int right = left + cellSize - 2;
                 int bottom = top + cellSize - 2;
                 if ((y == verticalCellCount/2 && x == horizontalCellCount/2) || (y == verticalCellCount/2+1 && x == horizontalCellCount/2+1)) {
@@ -48,6 +51,7 @@ public class Board {
     }
 
     public void draw(Canvas canvas) {
+        canvas.drawColor(player);
         int yLength = board.length;
         for (int y = 0; y < yLength; y++) {
             int xLength = board[y].length;
@@ -58,16 +62,16 @@ public class Board {
     }
 
     public boolean canPut(float x, float y) {
-        int setX = (int) (x / cellSize);
-        int setY = (int) (y / cellSize);
+        int setX = (int) ((x - spaceLeft) / cellSize);
+        int setY = (int) ((y - spaceTop) / cellSize);
         if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
 
         return (board[setY][setX].type == Cell.TYPE_EMPTY) ? true : false;
     }
 
     public void put(float x, float y) {
-        int setX = (int) (x / cellSize);
-        int setY = (int) (y / cellSize);
+        int setX = (int) ((x - spaceLeft) / cellSize);
+        int setY = (int) ((y - spaceTop) / cellSize);
 
         board[setY][setX].type = player;
     }

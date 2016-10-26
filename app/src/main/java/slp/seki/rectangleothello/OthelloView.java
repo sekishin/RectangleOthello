@@ -124,7 +124,7 @@ public class OthelloView extends SurfaceView implements SurfaceHolder.Callback {
     //-- 駒を置く
     public void put(float x, float y) {
         if ( board.canPut(x, y) ) {
-            board.put(x, y);
+            board.put();
             board.changePlayerColor();
         }
 

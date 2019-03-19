@@ -1,133 +1,95 @@
 package slp.seki.rectangleothello;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import android.view.View;
 
 /**
  * Created by 14t242 on 2016/07/22.
  */
-public class OthelloView extends SurfaceView implements SurfaceHolder.Callback {
+public class OthelloView extends View {
 
     private static final int DRAW_INTERVAL = 1000/60;
     private Board board;
     private final Paint textpaint = new Paint();
-    int touchX = 0;
-    int touchY = 0;
+    String turn;
+    String action;
 
     //-- コンストラクタ
-    public OthelloView(Context context) {
+    public OthelloView(MainActivity context) {
         super(context);
         textpaint.setColor(Color.BLACK);
         textpaint.setTextSize(40f);
-        getHolder().addCallback(this);
-    }
-    //-- 描画スレッド
-    private DrawThread drawThread;
-    private class DrawThread extends Thread {
-        private final AtomicBoolean isFinished = new AtomicBoolean();
-
-        public void finish() {
-            isFinished.set(true);
-        }
-
-        @Override
-        public void run() {
-            SurfaceHolder holder = getHolder();
-            while (! isFinished.get()) {
-                if (holder.isCreating()) {
-                    continue;
-                }
-                Canvas canvas = holder.lockCanvas();
-                if (canvas == null) {
-                    continue;
-                }
-                drawBoard(canvas);
-                holder.unlockCanvasAndPost(canvas);
-                synchronized (this) {
-                    try {
-                        wait(DRAW_INTERVAL);
-                    } catch (InterruptedException e) {
-
-                    }
-                }
-
-            }
-        }
-    }
-
-    //-- ゲーム開始
-    public void startDrawThread() {
-        stopDrawThread();
-        drawThread = new DrawThread();
-        drawThread.start();
-    }
-
-    //-- ゲーム終了
-    public boolean stopDrawThread() {
-        if (drawThread == null) {
-            return false;
-        }
-        drawThread.finish();
-        drawThread = null;
-        return true;
-    }
-
-    //-- 描画開始
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        startDrawThread();
+        setFocusable(true);
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        drawBoard(canvas);
     }
 
-    //-- 描画終了
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+    }
 
+    public void setHintVisible(boolean flag) {
+        this.board.setHintVisible(flag);
+        invalidate();
     }
 
     //-- 盤面描画
-    void drawBoard(Canvas canvas) {
+    public void drawBoard(Canvas canvas) {
         int cellSize = 150;
         if (board == null) {
             board = new Board(canvas.getWidth(), canvas.getHeight(), cellSize);
         }
-        canvas.drawColor(board.player);
+        canvas.drawColor(board.getPlayerColor());
         board.draw(canvas);
-        canvas.drawText("x = " + touchX, 10, 150, textpaint);
-        canvas.drawText("y = " + touchY, 10, 200, textpaint);
+        turn = board.getTurn();
+        canvas.drawText("TURN = " + turn, 10, 250, textpaint);
+        canvas.drawText("ACTION = " + action, 10, 300, textpaint);
     }
 
     //-- 画面をタッチしたら
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        action = ""+event.getAction();
         switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                 setTouchedCell(event.getX(), event.getY());
+                 break;
+            case MotionEvent.ACTION_UP:
+                putStone(event.getX(), event.getY());
+                break;
             case MotionEvent.ACTION_DOWN:
-                put(event.getX(), event.getY());
-                touchX = (int) (event.getX() / 100);
-                touchY = (int) (event.getY() / 100);
+                setTouchedCell(event.getX(), event.getY());
+                putStone(event.getX(), event.getY());
                 break;
         }
-        return super.onTouchEvent(event);
+        invalidate();
+        return true;
     }
 
+    //-- タッチしたセルをセット
+    public void setTouchedCell(float x, float y) {
+        board.setTouch(x, y);
+    }
     //-- 駒を置く
-    public void put(float x, float y) {
+    public void putStone(float x, float y) {
         if ( board.canPut(x, y) ) {
             board.put();
-            board.changePlayerColor();
+            board.switchPlayer();
+        }
+        if (board.countPuttableCell()==0) {
+            board.switchPlayer();
         }
 
     }
+
+
 
 }

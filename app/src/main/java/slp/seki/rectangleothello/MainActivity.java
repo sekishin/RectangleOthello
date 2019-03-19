@@ -6,15 +6,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity {
 
     private OthelloView othelloView;
+    private Button blackButton;
+    private Button whiteButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        othelloView = new OthelloView(this);
+        setContentView(R.layout.activity_main);
+        blackButton = (Button) findViewById(R.id.blackButton);
+        whiteButton = (Button) findViewById(R.id.whiteButton);
+        othelloView = (OthelloView) findViewById(R.id.othelloView);
         setContentView(othelloView);
     }
 

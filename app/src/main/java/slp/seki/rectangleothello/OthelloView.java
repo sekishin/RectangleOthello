@@ -1,28 +1,33 @@
 package slp.seki.rectangleothello;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.GradientDrawable;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 /**
  * Created by 14t242 on 2016/07/22.
  */
 public class OthelloView extends View {
 
-    private static final int DRAW_INTERVAL = 1000/60;
     private Board board;
-    private final Paint textpaint = new Paint();
-    String turn;
-    String action;
+    GradientDrawable drawable;
+    private Button black;
+    private Button white;
+    private int canvasWidth;
+    private int canvasHeight;
+    private int cellSize = 150;
+
 
     //-- コンストラクタ
-    public OthelloView(MainActivity context) {
-        super(context);
-        textpaint.setColor(Color.BLACK);
-        textpaint.setTextSize(40f);
-        setFocusable(true);
+    public OthelloView(Context context, AttributeSet attrs) {
+        super(context, attrs);
     }
 
     @Override
@@ -36,6 +41,20 @@ public class OthelloView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
+    public Cell.STATUS getTurn() {
+        return this.board.getTurn();
+    }
+
+    public void relateButton(Button black, Button white) {
+        this.black = black;
+        this.white = white;
+    }
+
+    public void initBoard() {
+        board = new Board(canvasWidth, canvasHeight, cellSize);
+        invalidate();
+    }
+
     public void setHintVisible(boolean flag) {
         this.board.setHintVisible(flag);
         invalidate();
@@ -43,21 +62,20 @@ public class OthelloView extends View {
 
     //-- 盤面描画
     public void drawBoard(Canvas canvas) {
-        int cellSize = 150;
         if (board == null) {
-            board = new Board(canvas.getWidth(), canvas.getHeight(), cellSize);
+            this.canvasWidth = canvas.getWidth();
+            this.canvasHeight = canvas.getHeight();
+            board = new Board(canvasWidth, canvasHeight, cellSize);
         }
-        canvas.drawColor(board.getPlayerColor());
+        this.black.setText("●：" + Integer.toString(this.board.countCells(Cell.STATUS.Black)));
+        this.white.setText("○：" + Integer.toString(this.board.countCells(Cell.STATUS.White)));
+        canvas.drawColor(Color.BLACK);
         board.draw(canvas);
-        turn = board.getTurn();
-        canvas.drawText("TURN = " + turn, 10, 250, textpaint);
-        canvas.drawText("ACTION = " + action, 10, 300, textpaint);
     }
 
     //-- 画面をタッチしたら
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        action = ""+event.getAction();
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                  setTouchedCell(event.getX(), event.getY());
@@ -83,11 +101,52 @@ public class OthelloView extends View {
         if ( board.canPut(x, y) ) {
             board.put();
             board.switchPlayer();
+            switchButtonColor();
         }
         if (board.countPuttableCell()==0) {
             board.switchPlayer();
+            switchButtonColor();
         }
 
+    }
+
+    public void showCountsToast(){
+        Cell.STATUS winner = board.getWinner();
+        String msg = "Black: " + board.countCells(Cell.STATUS.Black) + "\n"
+                + "White: " + board.countCells(Cell.STATUS.White) + "\n\n";
+
+        if (board.isFinished()){
+            if (winner != Cell.STATUS.Empty){
+                msg += "Winner is: " + Cell.statusToDisplay(winner) + "!!";
+            } else {
+                msg += "Draw game! ";
+            }
+        } else {
+            if (winner != Cell.STATUS.Empty){
+                msg += Cell.statusToDisplay(winner) + " is winning...\n\n";
+            }
+            msg += board.turnToDisplay() + "'s turn.";
+        }
+        Toast.makeText(this.getContext(), msg, Toast.LENGTH_LONG).show();
+    }
+
+    public void switchButtonColor() {
+        drawable = new GradientDrawable();
+
+        if (getTurn() == Cell.STATUS.Black) {
+            drawable = (GradientDrawable)black.getBackground();
+            drawable.setStroke(10, resColor(R.color.Red));
+            drawable = (GradientDrawable)white.getBackground();
+            drawable.setStroke(10, resColor(R.color.Gray));
+        } else if (getTurn() == Cell.STATUS.White) {
+            drawable = (GradientDrawable)white.getBackground();
+            drawable.setStroke(10, resColor(R.color.Red));
+            drawable = (GradientDrawable)black.getBackground();
+            drawable.setStroke(10, resColor(R.color.Gray));
+        }
+    }
+    int resColor(int res) {
+        return getResources().getColor(res);
     }
 
 

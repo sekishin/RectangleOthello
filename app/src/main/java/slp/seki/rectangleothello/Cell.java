@@ -80,4 +80,9 @@ public class Cell {
         }
 
     }
+
+    public static String statusToDisplay(STATUS status) {
+        if (status==STATUS.Black) return "黒";
+        return "白";
+    }
 }

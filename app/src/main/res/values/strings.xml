@@ -2,8 +2,8 @@
     <string name="app_name">長方形オセロ</string>
 
     <string name="menu_item1">ヒント表示</string>
-    <string name="menu_item2">2</string>
-    <string name="menu_item3">3</string>
+    <string name="menu_item2">カウント</string>
+    <string name="menu_item3">はじめから</string>
     <string name="menu_item4">4</string>
     <string name="menu_item5">5</string>
 </resources>

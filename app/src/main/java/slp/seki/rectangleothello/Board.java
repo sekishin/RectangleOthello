@@ -16,13 +16,13 @@ public class Board {
     private Cell.STATUS enemy = Cell.STATUS.White;
     private int spaceTop, spaceLeft;
     private int setX, setY;
-    private boolean hintVisible;
+    private boolean isFinish;
 
     public Board(int width, int height, int cellSize) {
         this.cellSize = cellSize;
         this.horizontalCellCount = width / cellSize;
         this.verticalCellCount = height / cellSize;
-        this.hintVisible = true;
+        this.isFinish = false;
         spaceTop = height % cellSize / 2;
         spaceLeft = width % cellSize / 2;
         cells = createBoard();
@@ -80,11 +80,6 @@ public class Board {
     }
 
     public void draw(Canvas canvas) {
-        if (this.player== Cell.STATUS.Black) {
-            canvas.drawColor(Color.BLACK);
-        } else {
-            canvas.drawColor(Color.WHITE);
-        }
         checkPutPosition();
         int yLength = cells.length;
         for (int y = 0; y < yLength; y++) {
@@ -95,8 +90,37 @@ public class Board {
         }
     }
 
-    public String getTurn() {
-        return this.player== Cell.STATUS.Black ? "black" : "white";
+    public int countCells(Cell.STATUS status) {
+        int count = 0;
+        int yLength = cells.length;
+        for (int y = 0; y < yLength; y++) {
+            int xLength = cells[y].length;
+            for (int x = 0; x < xLength; x++) {
+                if (cells[y][x].getStatus()==status) count++;
+            }
+        }
+        return count;
+    }
+
+    public boolean isFinished() {
+        if (countCells(Cell.STATUS.Empty)==0) {
+            isFinish = true;
+        } else {
+            isFinish = false;
+        }
+        return isFinish;
+    }
+
+    public Cell.STATUS getWinner() {
+        int whileCount = countCells(Cell.STATUS.White);
+        int blackCount = countCells(Cell.STATUS.Black);
+        if (whileCount > blackCount) return Cell.STATUS.White;
+        if (blackCount > whileCount) return Cell.STATUS.Black;
+        return Cell.STATUS.Empty;
+    }
+
+    public Cell.STATUS getTurn() {
+        return this.player;
     }
 
     public void copyBoard() {
@@ -108,12 +132,15 @@ public class Board {
     }
 
     public void setHintVisible(boolean flag) {
-        this.hintVisible = flag;
         for (int y = 0; y < verticalCellCount; y++) {
             for (int x = 0; x < horizontalCellCount; x++) {
                 this.cells[y][x].setHintVisible(flag);
             }
         }
+    }
+
+    public String turnToDisplay() {
+        return Cell.statusToDisplay(this.player);
     }
 
     private void checkPutPosition() {
@@ -130,6 +157,7 @@ public class Board {
     public boolean canPut(float x, float y) {
         this.setX = (int) ((x - spaceLeft) / cellSize);
         this.setY = (int) ((y - spaceTop) / cellSize);
+        if ( setX < 0 || setY < 0 ) { return false; }
         if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
         if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return  false; }
         copyBoard();
@@ -139,7 +167,8 @@ public class Board {
     public boolean canPut(int x, int y) {
         this.setX = x;
         this.setY = y;
-        if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
+        if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return false; }
+        if ( setX < 0 || setY < 0 ) { return false; }
         if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return  false; }
         copyBoard();
         return boardTurn(this.tmp);
@@ -153,6 +182,7 @@ public class Board {
         this.setX = (int) ((x - spaceLeft) / cellSize);
         this.setY = (int) ((y - spaceTop) / cellSize);
         if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return; }
+        if ( setX < 0 || setY < 0 ) { return; }
         for (int i = 0; i < verticalCellCount; i++) {
             for (int j = 0; j < horizontalCellCount; j++) {
                 this.cells[i][j].setIsTouch(false);

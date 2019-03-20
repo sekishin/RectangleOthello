@@ -32,6 +32,8 @@ public class Board {
         this.cellSize = cellSize;
         this.horizontalCellCount = width / cellSize;
         this.verticalCellCount = height / cellSize;
+        player = Cell.STATUS.Black;
+        enemy = Cell.STATUS.White;
         spaceTop = height % cellSize / 2;
         spaceLeft = width % cellSize / 2;
         cells = createBoard();

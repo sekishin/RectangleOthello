@@ -1,13 +1,19 @@
 package slp.seki.rectangleothello;
 
 public class HumanPlayer extends Player {
-    public HumanPlayer(Cell.STATUS color, String name, Board board) {
-        super(color, name, board);
+    public HumanPlayer(Cell.STATUS color, Board board) {
+        super(color, "Human", board);
+        this.playerId = 0;
     }
 
     @Override
     public boolean isHuman() {
         return true;
+    }
+
+    @Override
+    public int getPlayerId() {
+        return playerId;
     }
 
     @Override

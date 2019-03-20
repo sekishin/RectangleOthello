@@ -34,20 +34,25 @@ public class OthelloView extends View implements PlayerCallback {
     private TextView textView;
 
 
+
     //-- コンストラクタ
     public OthelloView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.paused = false;
         handler = new Handler();
         board = new Board();
-        setBlackPlayer(new HumanPlayer(Cell.STATUS.Black, "Human", this.board));
-        setWhitePlayer(new ComputerPlayer(Cell.STATUS.White, "Computer", this.board));
+        setBlackPlayer(new HumanPlayer(Cell.STATUS.Black, this.board));
+        setWhitePlayer(new ComputerPlayer(Cell.STATUS.White,this.board, 1));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawBoard(canvas);
+    }
+
+    public Board getBoard() {
+        return this.board;
     }
 
     @Override
@@ -102,8 +107,8 @@ public class OthelloView extends View implements PlayerCallback {
             this.canvasHeight = canvas.getHeight();
             initBoard();
         }
-        this.black.setText("●：" + Integer.toString(this.board.countCells(Cell.STATUS.Black)));
-        this.white.setText("○：" + Integer.toString(this.board.countCells(Cell.STATUS.White)));
+        this.black.setText("Black("+blackPlayer.getName()+")：" + Integer.toString(this.board.countCells(Cell.STATUS.Black)));
+        this.white.setText("White("+whitePlayer.getName()+")：" + Integer.toString(this.board.countCells(Cell.STATUS.White)));
         canvas.drawColor(Color.BLACK);
         board.draw(canvas);
     }
@@ -236,6 +241,8 @@ public class OthelloView extends View implements PlayerCallback {
         if (!this.board.isPlayableState()) return;;
 
         Player p = this.board.getTurn()== Cell.STATUS.Black ? blackPlayer : whitePlayer;
+        if (p.isHuman()) board.setHintVisible(true);
+        else board.setHintVisible(false);
         if (p != null) {
             p.startThinking(this);
         }

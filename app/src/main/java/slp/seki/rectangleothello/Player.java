@@ -6,6 +6,7 @@ public abstract class Player {
     protected Cell.STATUS color;
     protected String name;
     protected Board board;
+    protected int playerId;
 
     private int progress;
     private Cell currentCell;
@@ -26,6 +27,10 @@ public abstract class Player {
     }
 
     public abstract boolean isHuman();
+
+    public int getPlayerId() {
+        return playerId;
+    }
 
     public void setColor(Cell.STATUS color) {
         this.color = color;

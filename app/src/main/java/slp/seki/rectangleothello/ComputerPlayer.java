@@ -15,10 +15,11 @@ public class ComputerPlayer extends Player implements Runnable{
     private static int WAIT_MSEC = 1000;
     private Handler handler = new Handler();
 
-    public ComputerPlayer(Cell.STATUS color, String name, Board board) {
-        super(color, name, board);
+    public ComputerPlayer(Cell.STATUS color, Board board, int level) {
+        super(color, "Com Lv."+Integer.toString(level), board);
         stopped = false;
         rand = new Random();
+        this.playerId = level;
     }
 
     @Override

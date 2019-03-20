@@ -20,6 +20,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/border"
+                android:onClick="buttonClicked"
                 android:text="黒"
                 android:textSize="@dimen/activity_vertical_margin" />
 
@@ -29,6 +30,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/border"
+                android:onClick="buttonClicked"
                 android:text="白"
                 android:textSize="@dimen/activity_vertical_margin" />
         </LinearLayout>

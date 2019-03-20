@@ -8,12 +8,12 @@ import java.util.Random;
 
 public class ComputerPlayer extends Player implements Runnable{
 
-    private Handler handler = new Handler();
     private PlayerCallback callback;
     private Thread thread;
     private boolean stopped;
     private Random rand;
-    private static int WAIT_MSEC = 1;
+    private static int WAIT_MSEC = 1000;
+    private Handler handler = new Handler();
 
     public ComputerPlayer(Cell.STATUS color, String name, Board board) {
         super(color, name, board);
@@ -47,7 +47,12 @@ public class ComputerPlayer extends Player implements Runnable{
     @Override
     public void run() {
         final Point pos = think();
-        callback.onEndThinking(pos);
+        handler.post(new Runnable(){
+            @Override
+            public void run(){
+                callback.onEndThinking(pos);
+            }
+        });
     }
 
     public Point think() {
@@ -65,9 +70,12 @@ public class ComputerPlayer extends Player implements Runnable{
         }
         if (isStopped()) return pos;
 
-        int n = rand.nextInt(availableCells.size());
-        Cell chosenCell = availableCells.get(n);
-        pos = chosenCell.getPoint();
+        while (true) {
+            int n = rand.nextInt(availableCells.size());
+            Cell chosenCell = availableCells.get(n);
+            pos = chosenCell.getPoint();
+            if (board.canPut(pos.x, pos.y)) break;
+        }
         return pos;
     }
 

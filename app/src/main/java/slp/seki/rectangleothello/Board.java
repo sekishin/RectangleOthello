@@ -210,7 +210,7 @@ public class Board {
         this.setY = y;
         if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return false; }
         if ( setX < 0 || setY < 0 ) { return false; }
-        if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return  false; }
+        if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return false; }
         copyBoard();
         return boardTurn(this.tmp);
     }
@@ -230,8 +230,21 @@ public class Board {
             }
         }
         this.cells[setY][setX].setIsTouch(true);
-
     }
+
+    public void setTouch(int x, int y) {
+        this.setX = x;
+        this.setY = y;
+        if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return; }
+        if ( setX < 0 || setY < 0 ) { return; }
+        for (int i = 0; i < verticalCellCount; i++) {
+            for (int j = 0; j < horizontalCellCount; j++) {
+                this.cells[i][j].setIsTouch(false);
+            }
+        }
+        this.cells[setY][setX].setIsTouch(true);
+    }
+
 
     private boolean boardTurn(Cell[][] board) {
         int count = 0;

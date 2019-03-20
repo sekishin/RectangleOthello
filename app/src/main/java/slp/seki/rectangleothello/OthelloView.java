@@ -6,11 +6,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
 
 /**
  * Created by 14t242 on 2016/07/22.
@@ -27,12 +30,15 @@ public class OthelloView extends View implements PlayerCallback {
     private boolean paused;
     private Player blackPlayer;
     private Player whitePlayer;
+    private Handler handler;
+    private TextView textView;
 
 
     //-- コンストラクタ
     public OthelloView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.paused = false;
+        handler = new Handler();
         board = new Board();
         setBlackPlayer(new HumanPlayer(Cell.STATUS.Black, "Human", this.board));
         setWhitePlayer(new ComputerPlayer(Cell.STATUS.White, "Computer", this.board));
@@ -55,6 +61,10 @@ public class OthelloView extends View implements PlayerCallback {
 
     public Player getBlackPlayer() {
         return this.blackPlayer;
+    }
+
+    public void setTextView(TextView textView) {
+        this.textView = textView;
     }
 
     public void setWhitePlayer(Player player) {
@@ -102,17 +112,16 @@ public class OthelloView extends View implements PlayerCallback {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         Player p = this.board.getTurn()== Cell.STATUS.Black ? blackPlayer : whitePlayer;
-        if (p == null || !p.isHuman()) return true;
+        if (p == null) return true;
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                  setTouchedCell(event.getX(), event.getY());
                  break;
             case MotionEvent.ACTION_UP:
-                putStone(event.getX(), event.getY());
+                if (p.isHuman()) putStone(event.getX(), event.getY());
                 break;
             case MotionEvent.ACTION_DOWN:
                 setTouchedCell(event.getX(), event.getY());
-                putStone(event.getX(), event.getY());
                 break;
         }
         invalidate();
@@ -127,26 +136,32 @@ public class OthelloView extends View implements PlayerCallback {
 
     public void putStone(float x, float y) {
         if ( board.canPut(x, y) ) {
+            board.setTouch(x, y);
             board.put();
             board.switchPlayer();
             switchButtonColor();
+            callPlayer();
         }
         if (board.countPuttableCell()==0) {
             board.switchPlayer();
             switchButtonColor();
+            callPlayer();
         }
 
     }
 
     public void putStone(int x, int y) {
         if ( board.canPut(x, y) ) {
+            board.setTouch(x, y);
             board.put();
             board.switchPlayer();
             switchButtonColor();
+            callPlayer();
         }
         if (board.countPuttableCell()==0) {
             board.switchPlayer();
             switchButtonColor();
+            callPlayer();
         }
 
     }
@@ -185,7 +200,6 @@ public class OthelloView extends View implements PlayerCallback {
             drawable = (GradientDrawable)black.getBackground();
             drawable.setStroke(10, resColor(R.color.Gray));
         }
-        callPlayer();
     }
     int resColor(int res) {
         return getResources().getColor(res);
@@ -194,9 +208,10 @@ public class OthelloView extends View implements PlayerCallback {
     @Override
     public void onEndThinking(Point pos) {
         if (pos == null) return;
-        if (this.board.canPut(pos.x, pos.y)) return;
+        if (!this.board.canPut(pos.x, pos.y)) return;
         if (paused) return;
         putStone(pos.x, pos.y);
+        invalidate();
     }
 
     @Override

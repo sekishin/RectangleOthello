@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
         });
         othelloView.getBlackPlayer().setTextView(textView);
         othelloView.getWhitePlayer().setTextView(textView);
+        othelloView.setTextView(textView);
     }
 
     @Override

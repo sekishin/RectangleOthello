@@ -3,6 +3,7 @@ package slp.seki.rectangleothello;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 
 public class Cell {
@@ -21,8 +22,10 @@ public class Cell {
     private final int size;
     private final Paint paint;
     private final Rect rect;
+    private Point pos;
 
-    public Cell(STATUS status, int size, int left, int top, int right, int bottom) {
+    public Cell(STATUS status, int size, int left, int top, int right, int bottom, int x, int y) {
+        this.pos = new Point(x, y);
         this.status = status;
         this.size = size;
         this.isTouch = false;
@@ -30,6 +33,10 @@ public class Cell {
         this.hintVisible = true;
         paint = new Paint();
         rect = new Rect(left,top,right,bottom);
+    }
+
+    public Point getPoint() {
+        return this.pos;
     }
 
     public void setStatus(STATUS status) {
@@ -82,7 +89,11 @@ public class Cell {
     }
 
     public static String statusToDisplay(STATUS status) {
-        if (status==STATUS.Black) return "黒";
-        return "白";
+        if (status==STATUS.Black) return "Black";
+        return "White";
+    }
+
+    public Rect getRect() {
+        return this.rect;
     }
 }

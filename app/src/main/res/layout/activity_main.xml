@@ -20,8 +20,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/border"
-                android:textSize="@dimen/activity_vertical_margin"
-                android:text="黒" />
+                android:text="黒"
+                android:textSize="@dimen/activity_vertical_margin" />
 
             <Button
                 android:id="@+id/whiteButton"
@@ -29,8 +29,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:background="@drawable/border"
-                android:textSize="@dimen/activity_vertical_margin"
-                android:text="白" />
+                android:text="白"
+                android:textSize="@dimen/activity_vertical_margin" />
         </LinearLayout>
 
         <TextView
@@ -42,7 +42,7 @@
         <slp.seki.rectangleothello.OthelloView
             android:id="@+id/othelloView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 </RelativeLayout>

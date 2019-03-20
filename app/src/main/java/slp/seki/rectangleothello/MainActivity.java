@@ -3,6 +3,7 @@ package slp.seki.rectangleothello;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
                 whiteClicked(v);
             }
         });
+        othelloView.getBlackPlayer().setTextView(textView);
+        othelloView.getWhitePlayer().setTextView(textView);
     }
 
     @Override

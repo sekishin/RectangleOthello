@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -14,7 +15,7 @@ import android.widget.Toast;
 /**
  * Created by 14t242 on 2016/07/22.
  */
-public class OthelloView extends View {
+public class OthelloView extends View implements PlayerCallback {
 
     private Board board;
     GradientDrawable drawable;
@@ -23,11 +24,18 @@ public class OthelloView extends View {
     private int canvasWidth;
     private int canvasHeight;
     private int cellSize = 150;
+    private boolean paused;
+    private Player blackPlayer;
+    private Player whitePlayer;
 
 
     //-- コンストラクタ
     public OthelloView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        this.paused = false;
+        board = new Board();
+        setBlackPlayer(new HumanPlayer(Cell.STATUS.Black, "Human", this.board));
+        setWhitePlayer(new ComputerPlayer(Cell.STATUS.White, "Computer", this.board));
     }
 
     @Override
@@ -41,6 +49,22 @@ public class OthelloView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
+    public void setBlackPlayer(Player player) {
+        this.blackPlayer = player;
+    }
+
+    public Player getBlackPlayer() {
+        return this.blackPlayer;
+    }
+
+    public void setWhitePlayer(Player player) {
+        this.whitePlayer = player;
+    }
+
+    public Player getWhitePlayer() {
+        return this.whitePlayer;
+    }
+
     public Cell.STATUS getTurn() {
         return this.board.getTurn();
     }
@@ -51,8 +75,9 @@ public class OthelloView extends View {
     }
 
     public void initBoard() {
-        board = new Board(canvasWidth, canvasHeight, cellSize);
+        board.init(canvasWidth, canvasHeight, cellSize);
         invalidate();
+        callPlayer();
     }
 
     public void setHintVisible(boolean flag) {
@@ -62,10 +87,10 @@ public class OthelloView extends View {
 
     //-- 盤面描画
     public void drawBoard(Canvas canvas) {
-        if (board == null) {
+        if (!board.isPlayableState()) {
             this.canvasWidth = canvas.getWidth();
             this.canvasHeight = canvas.getHeight();
-            board = new Board(canvasWidth, canvasHeight, cellSize);
+            initBoard();
         }
         this.black.setText("●：" + Integer.toString(this.board.countCells(Cell.STATUS.Black)));
         this.white.setText("○：" + Integer.toString(this.board.countCells(Cell.STATUS.White)));
@@ -76,6 +101,8 @@ public class OthelloView extends View {
     //-- 画面をタッチしたら
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        Player p = this.board.getTurn()== Cell.STATUS.Black ? blackPlayer : whitePlayer;
+        if (p == null || !p.isHuman()) return true;
         switch (event.getAction()) {
             case MotionEvent.ACTION_MOVE:
                  setTouchedCell(event.getX(), event.getY());
@@ -97,7 +124,21 @@ public class OthelloView extends View {
         board.setTouch(x, y);
     }
     //-- 駒を置く
+
     public void putStone(float x, float y) {
+        if ( board.canPut(x, y) ) {
+            board.put();
+            board.switchPlayer();
+            switchButtonColor();
+        }
+        if (board.countPuttableCell()==0) {
+            board.switchPlayer();
+            switchButtonColor();
+        }
+
+    }
+
+    public void putStone(int x, int y) {
         if ( board.canPut(x, y) ) {
             board.put();
             board.switchPlayer();
@@ -144,9 +185,46 @@ public class OthelloView extends View {
             drawable = (GradientDrawable)black.getBackground();
             drawable.setStroke(10, resColor(R.color.Gray));
         }
+        callPlayer();
     }
     int resColor(int res) {
         return getResources().getColor(res);
+    }
+
+    @Override
+    public void onEndThinking(Point pos) {
+        if (pos == null) return;
+        if (this.board.canPut(pos.x, pos.y)) return;
+        if (paused) return;
+        putStone(pos.x, pos.y);
+    }
+
+    @Override
+    public void onProgress() {
+        invalidate();
+    }
+
+    @Override
+    public void onPointStarted(Point pos) {
+        Cell cell = this.board.getCell(pos);
+        invalidate(cell.getRect());
+    }
+
+    @Override
+    public void onPointEnded(Point pos) {
+        Cell cell = this.board.getCell(pos);
+        invalidate(cell.getRect());
+    }
+
+    public void callPlayer() {
+        if (paused) return;
+        if (!this.board.isPlayableState()) return;;
+
+        Player p = this.board.getTurn()== Cell.STATUS.Black ? blackPlayer : whitePlayer;
+        if (p != null) {
+            p.startThinking(this);
+        }
+
     }
 
 

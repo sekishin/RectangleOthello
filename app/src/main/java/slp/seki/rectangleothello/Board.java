@@ -2,13 +2,19 @@ package slp.seki.rectangleothello;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
+
+import java.util.ArrayList;
+
 import slp.seki.rectangleothello.Cell;
 
 /**
  * Created by 14t242 on 2016/07/22.
  */
 public class Board {
-    private final int cellSize;
+    private int cellSize;
     private int horizontalCellCount;
     private int verticalCellCount;
     private Cell[][] cells, tmp;
@@ -16,18 +22,39 @@ public class Board {
     private Cell.STATUS enemy = Cell.STATUS.White;
     private int spaceTop, spaceLeft;
     private int setX, setY;
-    private boolean hintVisible;
+    private boolean isFinish;
+    private Rect rect;
+    private boolean passed;
 
-    public Board(int width, int height, int cellSize) {
+    public Board() {
+        this.isFinish = false; }
+
+    public void init(int width, int height, int cellSize) {
         this.cellSize = cellSize;
         this.horizontalCellCount = width / cellSize;
         this.verticalCellCount = height / cellSize;
-        this.hintVisible = true;
+        this.passed = false;
+        this.isFinish = false;
+        player = Cell.STATUS.Black;
+        enemy = Cell.STATUS.White;
         spaceTop = height % cellSize / 2;
         spaceLeft = width % cellSize / 2;
         cells = createBoard();
         tmp = createBoard();
         checkPutPosition();
+    }
+
+    public boolean isPlayableState() {
+        if (cells == null) return false;
+        return true;
+    }
+
+    public void setPassed() {
+        this.passed = true;
+    }
+
+    public boolean getPassed() {
+        return this.passed;
     }
 
     private Cell[][] createBoard() {
@@ -73,19 +100,16 @@ public class Board {
                     }
                 }
 
-                board[y][x] = new Cell(status, cellSize/2, left, top, right, bottom);
+                board[y][x] = new Cell(status, cellSize/2, left, top, right, bottom, x, y);
             }
         }
         return board;
     }
 
     public void draw(Canvas canvas) {
-        if (this.player== Cell.STATUS.Black) {
-            canvas.drawColor(Color.BLACK);
-        } else {
-            canvas.drawColor(Color.WHITE);
-        }
         checkPutPosition();
+        this.rect = canvas.getClipBounds();
+        if (this.cells==null) return;
         int yLength = cells.length;
         for (int y = 0; y < yLength; y++) {
             int xLength = cells[y].length;
@@ -95,8 +119,53 @@ public class Board {
         }
     }
 
-    public String getTurn() {
-        return this.player== Cell.STATUS.Black ? "black" : "white";
+    public ArrayList<Cell> getAvailableCellList() {
+        ArrayList<Cell> cellList = new ArrayList<Cell>();
+        checkPutPosition();
+        for (int y = 0; y < verticalCellCount; y++) {
+            for (int x = 0; x < horizontalCellCount; x++) {
+                if (this.cells[y][x].getCanPut()) cellList.add(cells[y][x]);
+            }
+        }
+        return cellList;
+    }
+
+    public Rect getRect() {
+        return this.rect;
+    }
+
+    public Cell getCell(Point pos) {
+        int x = pos.x;
+        int y = pos.y;
+        if ( x < 0 || y < 0 ) { return null; }
+        if ( x >= horizontalCellCount || y > verticalCellCount ) { return null; }
+        return this.cells[y][x];
+    }
+
+    public int countCells(Cell.STATUS status) {
+        int count = 0;
+        if (this.cells==null) return 0;
+        int yLength = cells.length;
+        for (int y = 0; y < yLength; y++) {
+            if (cells[y] ==null) return count;
+            int xLength = cells[y].length;
+            for (int x = 0; x < xLength; x++) {
+                if (cells[y][x].getStatus()==status) count++;
+            }
+        }
+        return count;
+    }
+
+    public Cell.STATUS getWinner() {
+        int whileCount = countCells(Cell.STATUS.White);
+        int blackCount = countCells(Cell.STATUS.Black);
+        if (whileCount > blackCount) return Cell.STATUS.White;
+        if (blackCount > whileCount) return Cell.STATUS.Black;
+        return Cell.STATUS.Empty;
+    }
+
+    public Cell.STATUS getTurn() {
+        return this.player;
     }
 
     public void copyBoard() {
@@ -108,12 +177,23 @@ public class Board {
     }
 
     public void setHintVisible(boolean flag) {
-        this.hintVisible = flag;
         for (int y = 0; y < verticalCellCount; y++) {
             for (int x = 0; x < horizontalCellCount; x++) {
                 this.cells[y][x].setHintVisible(flag);
             }
         }
+    }
+
+    public void setFinish() {
+        this.isFinish = true;
+    }
+
+    public boolean isFinish() {
+        return this.isFinish;
+    }
+
+    public String turnToDisplay() {
+        return Cell.statusToDisplay(this.player);
     }
 
     private void checkPutPosition() {
@@ -130,6 +210,7 @@ public class Board {
     public boolean canPut(float x, float y) {
         this.setX = (int) ((x - spaceLeft) / cellSize);
         this.setY = (int) ((y - spaceTop) / cellSize);
+        if ( setX < 0 || setY < 0 ) { return false; }
         if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
         if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return  false; }
         copyBoard();
@@ -139,13 +220,15 @@ public class Board {
     public boolean canPut(int x, int y) {
         this.setX = x;
         this.setY = y;
-        if ( setX >= horizontalCellCount || setY > verticalCellCount ) { return false; }
-        if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return  false; }
+        if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return false; }
+        if ( setX < 0 || setY < 0 ) { return false; }
+        if ( cells[setY][setX].getStatus() != Cell.STATUS.Empty ) { return false; }
         copyBoard();
         return boardTurn(this.tmp);
     }
 
     public void put() {
+        this.passed = false;
         boardTurn(this.cells);
     }
 
@@ -153,14 +236,28 @@ public class Board {
         this.setX = (int) ((x - spaceLeft) / cellSize);
         this.setY = (int) ((y - spaceTop) / cellSize);
         if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return; }
+        if ( setX < 0 || setY < 0 ) { return; }
         for (int i = 0; i < verticalCellCount; i++) {
             for (int j = 0; j < horizontalCellCount; j++) {
                 this.cells[i][j].setIsTouch(false);
             }
         }
         this.cells[setY][setX].setIsTouch(true);
-
     }
+
+    public void setTouch(int x, int y) {
+        this.setX = x;
+        this.setY = y;
+        if ( setX >= horizontalCellCount || setY >= verticalCellCount ) { return; }
+        if ( setX < 0 || setY < 0 ) { return; }
+        for (int i = 0; i < verticalCellCount; i++) {
+            for (int j = 0; j < horizontalCellCount; j++) {
+                this.cells[i][j].setIsTouch(false);
+            }
+        }
+        this.cells[setY][setX].setIsTouch(true);
+    }
+
 
     private boolean boardTurn(Cell[][] board) {
         int count = 0;

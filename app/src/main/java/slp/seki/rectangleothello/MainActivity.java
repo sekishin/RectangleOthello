@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private Button whiteButton;
     private TextView textView;
     private GradientDrawable drawable;
-    private int chosen;
+    private PlayerSelectDialog dialog;
 
     int resColor(int res) {
         return getResources().getColor(res);
@@ -52,21 +52,59 @@ public class MainActivity extends AppCompatActivity {
         othelloView.getBlackPlayer().setTextView(textView);
         othelloView.getWhitePlayer().setTextView(textView);
         othelloView.setTextView(textView);
+        dialog = new PlayerSelectDialog();
     }
 
-    public Player makePlayer(int id, Cell.STATUS color) {
-        switch (id) {
-            case 0:
-                return new HumanPlayer(color, othelloView.getBoard());
-            case 1:
-                return new ComputerPlayer(color, othelloView.getBoard(), 1);
+    public void setPlayer(int id, Cell.STATUS color) {
+        switch (color) {
+            case Black:
+                setBlackPlayer(id);
+                othelloView.callPlayer();
+                break;
+            case White:
+                setWhitePlayer(id);
+                othelloView.callPlayer();
+                break;
             default:
-                return new HumanPlayer(color, othelloView.getBoard());
+                textView.setText(("error"));
+                break;
         }
     }
 
-    public void setChosen(int id) {
-        this.chosen = id;
+    public void setBlackPlayer(int id) {
+        if (othelloView.getBlackPlayer().getPlayerId()==id) return;
+        switch (id) {
+            case 0:
+                othelloView.setBlackPlayer(new HumanPlayer(Cell.STATUS.Black, othelloView.getBoard()));
+                othelloView.getBlackPlayer().setTextView(textView);
+                break;
+            case 1:
+                othelloView.setBlackPlayer(new ComputerPlayer(Cell.STATUS.Black, othelloView.getBoard(),1));
+                othelloView.getBlackPlayer().setTextView(textView);
+                break;
+            default:
+                textView.setText(("error"));
+                break;
+        }
+        othelloView.restart();
+    }
+
+    public void setWhitePlayer(int id) {
+        if (othelloView.getWhitePlayer().getPlayerId()==id) return;
+        switch (id) {
+            case 0:
+                othelloView.setWhitePlayer(new HumanPlayer(Cell.STATUS.White, othelloView.getBoard()));
+                othelloView.getWhitePlayer().setTextView(textView);
+                break;
+            case 1:
+                othelloView.setWhitePlayer(new ComputerPlayer(Cell.STATUS.White, othelloView.getBoard(),1));
+                othelloView.getWhitePlayer().setTextView(textView);
+                break;
+            default:
+                textView.setText(("error"));
+                break;
+        }
+        othelloView.restart();
     }
 
     @Override
@@ -77,21 +115,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void buttonClicked(View v) {
+        if (dialog.isVisible()) return;
+        othelloView.pause();
         final String[] items = {"Human", "Computer Lv.1"};
+        Bundle args = new Bundle();
+        args.putStringArray("items", items);
         if (v.getId() == R.id.blackButton) {
             textView.setText("黒");
-            int chosen = PlayerSelectDialog.showDialog(this, "Black Player", items, othelloView.getBlackPlayer().getPlayerId());
-            textView.setText(Integer.toString(chosen));
-            if (chosen != othelloView.getBlackPlayer().getPlayerId()) othelloView.setBlackPlayer(makePlayer(chosen, Cell.STATUS.Black));
-            othelloView.getBlackPlayer().setTextView(textView);
-            //othelloView.callPlayer();
+            args.putString("title", "Black Player");
+            args.putInt("chosen", othelloView.getBlackPlayer().getPlayerId());
+            args.putInt("color", 0);
         } else if (v.getId() == R.id.whiteButton) {
             textView.setText("白");
-            int chosen = PlayerSelectDialog.showDialog(this, "White Player", items, othelloView.getWhitePlayer().getPlayerId());
-            if (chosen != othelloView.getBlackPlayer().getPlayerId()) othelloView.setWhitePlayer(makePlayer(chosen, Cell.STATUS.White));
-            othelloView.getWhitePlayer().setTextView(textView);
-            othelloView.callPlayer();
+            args.putString("title", "White Player");
+            args.putInt("chosen", othelloView.getWhitePlayer().getPlayerId());
+            args.putInt("color", 1);
         }
+        dialog.setArguments(args);
+        dialog.show(this.getFragmentManager(), "TAG");
     }
 
 
@@ -117,21 +158,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public static class PlayerSelectDialog extends DialogFragment {
-        public static void showDialog(Activity activity, String title, String[] items, int chosen) {
-            PlayerSelectDialog dialog = new PlayerSelectDialog();
-            Bundle args = new Bundle();
-            args.putString("title", title);
-            args.putStringArray("items", items);
-            args.putInt("chosen", chosen);
-            dialog.setArguments(args);
-            dialog.show(activity.getFragmentManager(), "TAG");
-        }
+
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             final List<Integer> checkedItems = new ArrayList<>();
             final String[] items = getArguments().getStringArray("items");
             final String title = getArguments().getString("title");
             int chosen = getArguments().getInt("chosen");
+            final Cell.STATUS color = (getArguments().getInt("color")==0) ? Cell.STATUS.Black : Cell.STATUS.White;
             checkedItems.add(chosen);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setTitle(title);
@@ -145,10 +179,18 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     if (!checkedItems.isEmpty()) {
+                        MainActivity main = (MainActivity)getActivity();
+                        main.setPlayer(checkedItems.get(0), color);
                         Log.d("checkedItem:", "" + checkedItems.get(0));
                     }
                 }
-            }).setNegativeButton("Cancel", null).show();
+            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    MainActivity main = (MainActivity)getActivity();
+                    main.othelloView.restart();
+                }
+            }).show();
         }
 
         @Override

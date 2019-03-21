@@ -19,6 +19,10 @@ public class HumanPlayer extends Player {
     @Override
     public void startThinking(PlayerCallback callback) {
         this.textView.setText(Cell.statusToDisplay(this.color)+"("+this.name+") is thinking");
+        if (this.board.getAvailableCellList().size() == 0) {
+            if (this.board.getPassed()) this.board.setFinish();
+            this.board.setPassed();
+        }
         callback.onEndThinking(null);
     }
 

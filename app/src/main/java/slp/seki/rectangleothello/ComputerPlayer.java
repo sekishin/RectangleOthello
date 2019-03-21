@@ -32,6 +32,8 @@ public class ComputerPlayer extends Player implements Runnable{
         this.textView.setText(Cell.statusToDisplay(this.color)+"("+this.name+") is thinking");
         this.callback = callback;
         if (this.board.getAvailableCellList().size() == 0) {
+            if (this.board.getPassed()) this.board.setFinish();
+            this.board.setPassed();
             callback.onEndThinking(null);
             return;
         }
@@ -67,6 +69,8 @@ public class ComputerPlayer extends Player implements Runnable{
 
         ArrayList<Cell> availableCells = this.board.getAvailableCellList();
         if (availableCells.size() == 0) {
+            if (this.board.getPassed()) this.board.setFinish();
+            this.board.setPassed();
             return pos;
         }
         if (isStopped()) return pos;

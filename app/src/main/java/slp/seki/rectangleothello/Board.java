@@ -24,6 +24,7 @@ public class Board {
     private int setX, setY;
     private boolean isFinish;
     private Rect rect;
+    private boolean passed;
 
     public Board() {
         this.isFinish = false; }
@@ -32,6 +33,8 @@ public class Board {
         this.cellSize = cellSize;
         this.horizontalCellCount = width / cellSize;
         this.verticalCellCount = height / cellSize;
+        this.passed = false;
+        this.isFinish = false;
         player = Cell.STATUS.Black;
         enemy = Cell.STATUS.White;
         spaceTop = height % cellSize / 2;
@@ -44,6 +47,14 @@ public class Board {
     public boolean isPlayableState() {
         if (cells == null) return false;
         return true;
+    }
+
+    public void setPassed() {
+        this.passed = true;
+    }
+
+    public boolean getPassed() {
+        return this.passed;
     }
 
     private Cell[][] createBoard() {
@@ -145,15 +156,6 @@ public class Board {
         return count;
     }
 
-    public boolean isFinished() {
-        if (countCells(Cell.STATUS.Empty)==0) {
-            isFinish = true;
-        } else {
-            isFinish = false;
-        }
-        return isFinish;
-    }
-
     public Cell.STATUS getWinner() {
         int whileCount = countCells(Cell.STATUS.White);
         int blackCount = countCells(Cell.STATUS.Black);
@@ -180,6 +182,14 @@ public class Board {
                 this.cells[y][x].setHintVisible(flag);
             }
         }
+    }
+
+    public void setFinish() {
+        this.isFinish = true;
+    }
+
+    public boolean isFinish() {
+        return this.isFinish;
     }
 
     public String turnToDisplay() {
@@ -218,6 +228,7 @@ public class Board {
     }
 
     public void put() {
+        this.passed = false;
         boardTurn(this.cells);
     }
 

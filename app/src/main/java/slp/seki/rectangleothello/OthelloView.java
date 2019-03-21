@@ -168,7 +168,12 @@ public class OthelloView extends View implements PlayerCallback {
             switchButtonColor();
             callPlayer();
         }
+    }
 
+    public void execPass() {
+        board.switchPlayer();
+        switchButtonColor();
+        callPlayer();
     }
 
     public void showCountsToast(){
@@ -176,7 +181,7 @@ public class OthelloView extends View implements PlayerCallback {
         String msg = "Black: " + board.countCells(Cell.STATUS.Black) + "\n"
                 + "White: " + board.countCells(Cell.STATUS.White) + "\n\n";
 
-        if (board.isFinished()){
+        if (board.isFinish()){
             if (winner != Cell.STATUS.Empty){
                 msg += "Winner is: " + Cell.statusToDisplay(winner) + "!!";
             } else {
@@ -212,6 +217,7 @@ public class OthelloView extends View implements PlayerCallback {
 
     @Override
     public void onEndThinking(Point pos) {
+        if (board.getPassed()) execPass();
         if (pos == null) return;
         if (!this.board.canPut(pos.x, pos.y)) return;
         if (paused) return;
@@ -238,15 +244,44 @@ public class OthelloView extends View implements PlayerCallback {
 
     public void callPlayer() {
         if (paused) return;
-        if (!this.board.isPlayableState()) return;;
+        if (!this.board.isPlayableState()) return;
 
-        Player p = this.board.getTurn()== Cell.STATUS.Black ? blackPlayer : whitePlayer;
-        if (p.isHuman()) board.setHintVisible(true);
-        else board.setHintVisible(false);
-        if (p != null) {
-            p.startThinking(this);
+        if (this.board.isFinish()) {
+            textView.setText("Game Set");
+            showCountsToast();
+            return;
         }
 
+        Player p;
+        if (this.board.getTurn()== Cell.STATUS.Black) {
+            p = blackPlayer;
+            whitePlayer.stopThinking();
+        } else if (this.board.getTurn() == Cell.STATUS.White){
+            p = whitePlayer;
+            blackPlayer.stopThinking();
+        } else return;
+        if (p != null) {
+            if (p.isHuman()) board.setHintVisible(true);
+            else {
+                board.setHintVisible(false);
+                if (((ComputerPlayer) p).isStopped()) ((ComputerPlayer) p).setStopped(false);
+            }
+            p.startThinking(this);
+        }
+    }
+
+    public void finish() {
+        board.setFinish();
+    }
+
+    public void pause() {
+        if (blackPlayer!=null) blackPlayer.stopThinking();
+        if (whitePlayer!=null) whitePlayer.stopThinking();
+    }
+
+    public void restart() {
+        invalidate();
+        callPlayer();
     }
 
 
